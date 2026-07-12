@@ -1,0 +1,21 @@
+{
+  "configurations": [
+    {
+      "name": "UCRT64",
+      "compilerPath": "C:/msys64/ucrt64/bin/g++.exe",
+      "intelliSenseMode": "windows-gcc-x64",
+      "includePath": [
+        "${workspaceFolder}/**",
+        "${workspaceFolder}/src",
+        "${workspaceFolder}/godot-cpp/include",
+        "${workspaceFolder}/godot-cpp/gen/include"
+      ],
+      "defines": [
+        "_DEBUG",
+        "WINDOWS_ENABLED"
+      ],
+      "cppStandard": "c++17"
+    }
+  ],
+  "version": 4
+}
