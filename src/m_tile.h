@@ -3,6 +3,7 @@
 
 #include <godot_cpp/classes/sprite2d.hpp>
 #include <godot_cpp/classes/color_rect.hpp>
+#include <godot_cpp/variant/color.hpp>
 
 #include <fstream>
 namespace godot {
@@ -19,9 +20,13 @@ protected:
 	static void _bind_methods();
 
 public:
+	int id;
+	Color color;
+
     m_tile();
-	//m_tile(int x, int y): m_x(x), m_y(y){};
 	~m_tile();
+
+	void color_set (const Color&);
 
 	void _draw() override;
 	void _ready();

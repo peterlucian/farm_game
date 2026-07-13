@@ -1,8 +1,8 @@
 63f7b34db8d8cdea90c76aacccf841ec
-::res://::1783864773
+::res://::1783943145
 gd_example.tscn::PackedScene::1472209690120926745::1780757367::0::1::::<><><>0<>0<><>::
 icon.svg::CompressedTexture2D::5315792862006088745::1775917871::1775917875::1::::<><><>0<>0<>5e7d0aea1d4d846b2d004db22fb46ba0<>res://.godot/imported/icon.svg-218a8f2b3041327d8a5756f3a245f83b.ctex::
-main.tscn::PackedScene::8645807363617327497::1783864735::0::1::::<><><>0<>0<><>::
-save.txt::TextFile::-1::1783864736::0::1::::<><><>0<>0<><>::
-::res://bin/::1783864770
+main.tscn::PackedScene::8645807363617327497::1783865661::0::1::::<><><>0<>0<><>::
+save.txt::TextFile::-1::1783866024::0::1::::<><><>0<>0<><>::
+::res://bin/::1783943143
 example.gdextension.gdextension::GDExtension::2800455500473408278::1775904444::0::1::::<><><>0<>0<><>::
