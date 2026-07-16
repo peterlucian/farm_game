@@ -98,7 +98,7 @@ void GDExample::_ready()
     }
 
     
-
+    //hand = get_node<RayCast2D>("hand");
     
     //Tile tile;
     //  // Get current datetime dictionary
@@ -151,15 +151,14 @@ void GDExample::_ready()
                 (col < THICKNESS) ||                      // Left side
                 (col >= COLS - THICKNESS) ||             // Right side
                 (row >= ROWS - THICKNESS);               // Bottom
-
+            
             if (draw)
             {
                 m_tile *tile = memnew(m_tile);
-                tile->set_size(Vector2(50, 50));
-                tile->set_color( Color(0, 0, 1, 1));
                 tile->set_position(Vector2(col * CELL_SIZE, row * CELL_SIZE));
                 tile->id = next_id++;
-                UtilityFunctions::print("adding a child", tile->id); 
+                //UtilityFunctions::print("adding a child", tile->id); 
+                //UtilityFunctions::print(Vector2(col * CELL_SIZE, row * CELL_SIZE)); 
                 
                 add_child(tile);
 
@@ -189,7 +188,6 @@ void GDExample::_ready()
 
     auto map_tile = std::next(map_tiles.begin(), 16);
     map_tile->second.color = Color(0, 1, 1, 1);
-    map_tile->first->color_set(map_tile->second.color); 
 
     file.flush();      // make sure data is written
     file.clear();      // clear eof/fail flags

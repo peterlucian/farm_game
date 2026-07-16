@@ -2,6 +2,7 @@
 #define GDEXAMPLE_H
 
 #include <godot_cpp/classes/sprite2d.hpp>
+#include <godot_cpp/classes/ray_cast2d.hpp>
 #include <fstream>
 namespace godot {
 
@@ -23,7 +24,7 @@ public:
 	void _process(double delta) override;
 
 	bool is_empty();
-
+	RayCast2D* hand = nullptr;
 	std::fstream file;
 
 
