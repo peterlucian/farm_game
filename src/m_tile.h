@@ -3,6 +3,7 @@
 
 #include <godot_cpp/classes/sprite2d.hpp>
 #include <godot_cpp/classes/area2d.hpp>
+#include <godot_cpp/classes/ray_cast2d.hpp>
 #include <godot_cpp/classes/collision_shape2d.hpp>
 #include <godot_cpp/variant/color.hpp>
 
@@ -23,11 +24,12 @@ public:
 	Color color;
 	CollisionShape2D *collision = nullptr;
 	Sprite2D *sprite = nullptr;
-	
+	//RayCast2D *raycast = nullptr;
 
     m_tile();
 	~m_tile();
 
+	void _input(const Ref<InputEvent> &event) override;
 	void _ready();
 	void _process(double delta) override;
 

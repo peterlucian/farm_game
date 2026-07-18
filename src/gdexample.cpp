@@ -155,10 +155,16 @@ void GDExample::_ready()
     // }
 
    
-    const int CELL_SIZE = 50;
-    const int COLS = 25;
-    const int ROWS = 14;
-    const int THICKNESS = 4;
+    // const int CELL_SIZE = 50;
+    // const int COLS = 25;
+    // const int ROWS = 14;
+    // const int THICKNESS = 4;
+    // const int OFFSET = 25;
+
+    const int CELL_SIZE = 75;
+    const int COLS = 17;
+    const int ROWS = 9;
+    const int THICKNESS = 3;
     
     int next_id = 0;  
 
@@ -174,7 +180,7 @@ void GDExample::_ready()
             if (draw)
             {
                 m_tile *tile = memnew(m_tile);
-                tile->set_position(Vector2(col * CELL_SIZE, row * CELL_SIZE));
+                tile->set_position(Vector2(col * CELL_SIZE, row * CELL_SIZE ));
                 tile->id = next_id++;
                 //UtilityFunctions::print("adding a child", tile->id); 
                 //UtilityFunctions::print(Vector2(col * CELL_SIZE, row * CELL_SIZE)); 
@@ -229,6 +235,7 @@ void GDExample::_physics_process(double delta)
         return;
 
     line->clear_points();
+    line->set_default_color(Color(0, 0, 0)); // Black
     line->add_point(Vector2(0, 0));
     line->add_point(raycast->get_target_position());
 
@@ -237,10 +244,20 @@ void GDExample::_physics_process(double delta)
     // // Direction from the player to the mouse
     // Vector2 dir = mouse - get_global_position();
     // // Point the ray toward the mouse
-    // raycast->set_target_position(dir);
+    
+    //float ray_length = 300.0f;
+
+    // Vector2 mouse = get_global_mouse_position();
+    // Vector2 direction = (mouse - raycast->get_global_position()).normalized();
+
+    // raycast->set_target_position(direction * ray_length);
+    
     Vector2 mouse = get_global_mouse_position();
-    Vector2 direction = (mouse - raycast->get_global_position()).normalized();
-    //raycast->force_raycast_update();
+    raycast->set_global_position(mouse);
+    
+    // Example: point to the right
+    raycast->set_target_position(Vector2(0, 1));
+    raycast->force_raycast_update();
 
     if (Input::get_singleton()->is_action_pressed("grab"))
     {

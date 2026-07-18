@@ -5,7 +5,8 @@
 #include <godot_cpp/classes/input.hpp>
 #include <godot_cpp/classes/rectangle_shape2d.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
-
+#include <godot_cpp/classes/input_event.hpp>
+#include <godot_cpp/classes/input_event_mouse_button.hpp>
 
 using namespace godot;
 
@@ -23,6 +24,8 @@ m_tile::~m_tile() {
 
 void m_tile::_ready()
 {
+    //raycast = get_node<RayCast2D>("../RayCast2D");
+
     
     sprite = memnew(Sprite2D);
     // Load texture
@@ -30,8 +33,8 @@ void m_tile::_ready()
     Vector2 tex_size = tex->get_size();
     
     sprite->set_scale(Vector2(
-        50.0f / tex_size.x,
-        50.0f / tex_size.y
+        75.0f / tex_size.x,
+        75.0f / tex_size.y
     ));
     sprite->set_texture(tex);
     sprite->set_centered(false);
@@ -39,17 +42,42 @@ void m_tile::_ready()
     add_child(sprite);
 
     collision = memnew(CollisionShape2D);
+
     Ref<RectangleShape2D> rect;
     rect.instantiate();
-    rect->set_size(Vector2(50, 50));
+    rect->set_size(Vector2(75, 75));
 
     collision->set_shape(rect);
-    // UtilityFunctions::print("Texture size: ", tex->get_size());
-    // UtilityFunctions::print("Sprite scale: ", sprite->get_scale());
+    collision->set_position(Vector2(37.5f, 37.5f));
+
 
     add_child(collision);
 }
 
+
+void m_tile::_input(const Ref<InputEvent> &event)
+{
+//     if (!is_inside_tree())
+//         return;
+
+//     Ref<InputEventMouseButton> mb = event;
+
+//     if (mb.is_valid() &&
+//         mb->is_pressed() &&
+//         mb->get_button_index() == MouseButton::MOUSE_BUTTON_LEFT)
+//     {
+//         raycast->force_raycast_update();
+
+//         if (raycast->is_colliding())
+//         {
+//             if (m_tile *tile = Object::cast_to<m_tile>(raycast->get_collider()))
+//             {
+//                 UtilityFunctions::print("Clicked tile ", tile->id);
+//             }
+//         }
+//     }
+
+}
 
 void m_tile::_process(double delta) {
 
