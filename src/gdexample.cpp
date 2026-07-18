@@ -2,7 +2,6 @@
 #include "m_tile.h"
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/classes/node2d.hpp>
-//#include <godot_cpp/classes/control.hpp>
 #include <godot_cpp/classes/color_rect.hpp>
 #include <godot_cpp/variant/color.hpp>
 #include <godot_cpp/classes/time.hpp>
@@ -10,10 +9,15 @@
 #include <godot_cpp/variant/dictionary.hpp>
 #include <iostream>
 #include <vector>
+#include <godot_cpp/classes/input.hpp>
+#include <godot_cpp/classes/input_event_mouse_button.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
 #include <godot_cpp/core/memory.hpp>
+#include <godot_cpp/classes/input_event.hpp>
 #include <map>
-
+#include <godot_cpp/classes/ray_cast2d.hpp>
+#include <godot_cpp/variant/vector2.hpp>
+#include <godot_cpp/classes/object.hpp>
 
 
 using namespace godot;
@@ -81,6 +85,15 @@ GDExample::~GDExample() {
 
 void GDExample::_ready()
 {
+    if (!is_inside_tree())
+        return;
+    
+    raycast = get_node<RayCast2D>("RayCast2D");
+    line = get_node<Line2D>("RayCast2D/Line2D");
+
+    line->clear_points();
+    line->add_point(Vector2(0, 0));
+    line->add_point(raycast->get_target_position());
    
     //file.open("save.txt", std::ios::in | std::ios::out | std::ios::trunc);
 	 // If file doesn't exist, create it
@@ -97,8 +110,14 @@ void GDExample::_ready()
         std::cout << "Failed to open file\n";
     }
 
-    
-    //hand = get_node<RayCast2D>("hand");
+    //UtilityFunctions::print("I am: ", get_path());
+
+    // UtilityFunctions::print("Children: ", get_child_count());
+
+    // for (int i = 0; i < get_child_count(); i++) {
+    //     Node *child = get_child(i);
+    //     UtilityFunctions::print("Child ", i, ": ", child->get_name(), " path=", child->get_path());
+    // }
     
     //Tile tile;
     //  // Get current datetime dictionary
@@ -177,7 +196,7 @@ void GDExample::_ready()
                 map_tiles[tile] = til;
                 if(!is_empty()){
                 if (!file.write(reinterpret_cast<char*>(&til), sizeof(Tile))){
-                    UtilityFunctions::print("adding a child to file", tile->id); 
+                    //UtilityFunctions::print("adding a child to file", tile->id); 
 
                 }}
             }
@@ -202,6 +221,65 @@ void GDExample::_ready()
     }
 
     file.close();
+}
+
+void GDExample::_physics_process(double delta)
+{
+    if (!is_inside_tree())
+        return;
+
+    line->clear_points();
+    line->add_point(Vector2(0, 0));
+    line->add_point(raycast->get_target_position());
+
+    // float ray_length = 10.0f;
+    // Vector2 mouse = get_global_mouse_position();
+    // // Direction from the player to the mouse
+    // Vector2 dir = mouse - get_global_position();
+    // // Point the ray toward the mouse
+    // raycast->set_target_position(dir);
+    Vector2 mouse = get_global_mouse_position();
+    Vector2 direction = (mouse - raycast->get_global_position()).normalized();
+    //raycast->force_raycast_update();
+
+    if (Input::get_singleton()->is_action_pressed("grab"))
+    {
+        if (raycast->is_colliding())
+        {
+
+            //UtilityFunctions::print("Clicked tile ");
+            Object *obj = raycast->get_collider();
+
+            if (m_tile *tile = Object::cast_to<m_tile>(obj))
+            {
+                UtilityFunctions::print("Clicked tile: ", tile->id);
+            }
+        }
+    }
+}
+
+void GDExample::_input(const Ref<InputEvent> &event)
+{
+    if (!is_inside_tree())
+        return;
+
+    // Ref<InputEventMouseButton> mb = event;
+
+    // if (mb.is_valid() &&
+    //     mb->is_pressed() &&
+    //     mb->get_button_index() == MouseButton::MOUSE_BUTTON_LEFT)
+    // {
+    //     raycast->force_raycast_update();
+
+    //     if (raycast->is_colliding())
+    //     {
+    //         if (m_tile *tile = Object::cast_to<m_tile>(raycast->get_collider()))
+    //         {
+    //             UtilityFunctions::print("Clicked tile ", tile->id);
+    //         }
+    //     }
+    // }
+
 }
 
 
