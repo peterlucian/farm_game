@@ -88,8 +88,8 @@ void GDExample::_ready()
     if (!is_inside_tree())
         return;
     
-    raycast = get_node<RayCast2D>("RayCast2D");
-    line = get_node<Line2D>("RayCast2D/Line2D");
+    raycast = get_node<RayCast2D>("../RayCast2D");
+    line = get_node<Line2D>("../RayCast2D/Line2D");
 
     line->clear_points();
     line->add_point(Vector2(0, 0));
@@ -252,33 +252,53 @@ void GDExample::_physics_process(double delta)
 
     // raycast->set_target_position(direction * ray_length);
     
-    Vector2 mouse = get_global_mouse_position();
-    raycast->set_global_position(mouse);
+    // Vector2 mouse = get_global_mouse_position();
+    // raycast->set_global_position(mouse);
     
-    // Example: point to the right
-    raycast->set_target_position(Vector2(0, 1));
+    // // Example: point to the right
+    // raycast->set_target_position(Vector2(0, 10));
+    // raycast->force_raycast_update();
+
+    Vector2 mouse = get_global_mouse_position();
+
+    raycast->set_global_position(mouse + Vector2(0, -10));
+    raycast->set_target_position(Vector2(0, 20));
+
     raycast->force_raycast_update();
 
+    // if (Input::get_singleton()->is_action_pressed("grab"))
+    // {
+    //     if (raycast->is_colliding())
+    //     {
+
+    //         //UtilityFunctions::print("Clicked tile ");
+    //         Object *obj = raycast->get_collider();
+
+    //         if (m_tile *tile = Object::cast_to<m_tile>(obj))
+    //         {
+    //             UtilityFunctions::print("Clicked tile: ", tile->id);
+    //         }
+    //     }
+    // }
+
+    
     if (Input::get_singleton()->is_action_pressed("grab"))
     {
         if (raycast->is_colliding())
         {
-
-            //UtilityFunctions::print("Clicked tile ");
             Object *obj = raycast->get_collider();
+
+            UtilityFunctions::print("Collider class: ", obj->get_class());
 
             if (m_tile *tile = Object::cast_to<m_tile>(obj))
             {
                 UtilityFunctions::print("Clicked tile: ", tile->id);
             }
         }
-    }
-}
+    }}
 
 void GDExample::_input(const Ref<InputEvent> &event)
 {
-    if (!is_inside_tree())
-        return;
 
     // Ref<InputEventMouseButton> mb = event;
 

@@ -2,15 +2,16 @@
 
 [node name="main" type="Node2D" unique_id=1245298982]
 
-[node name="GDExample" type="GDExample" parent="." unique_id=1137800772]
-
-[node name="RayCast2D" type="RayCast2D" parent="GDExample" unique_id=1019127577]
-position = Vector2(178, 116)
+[node name="RayCast2D" type="RayCast2D" parent="." unique_id=1019127577]
+exclude_parent = false
 target_position = Vector2(-92, -88)
+hit_from_inside = true
 collide_with_areas = true
 collide_with_bodies = false
 
-[node name="Line2D" type="Line2D" parent="GDExample/RayCast2D" unique_id=1332049958]
+[node name="Line2D" type="Line2D" parent="RayCast2D" unique_id=1332049958]
 points = PackedVector2Array(111, 203)
 width = 5.0
 default_color = Color(0.20392157, 1, 1, 1)
+
+[node name="GDExample" type="GDExample" parent="." unique_id=1137800772]
