@@ -9,6 +9,7 @@
 #include <godot_cpp/variant/dictionary.hpp>
 #include <iostream>
 #include <vector>
+#include <string>
 #include <godot_cpp/classes/input.hpp>
 #include <godot_cpp/classes/input_event_mouse_button.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
@@ -17,6 +18,7 @@
 #include <map>
 #include <godot_cpp/classes/ray_cast2d.hpp>
 #include <godot_cpp/variant/vector2.hpp>
+#include <godot_cpp/classes/resource_loader.hpp>
 #include <godot_cpp/classes/object.hpp>
 
 
@@ -33,8 +35,8 @@ enum typesOfSoil{
 
 struct Tile {
 
-    int type = typesOfSoil::weed; 
-    Color color;    
+    String texture;  
+    int type = typesOfSoil::weed;   
     int growth = 1;
     bool occupied = true;
     int year;
@@ -76,10 +78,7 @@ bool GDExample::is_empty()
 
 GDExample::~GDExample() {
 	// Add your cleanup here.
-
-    
-    
-    //file.close();
+    file.close();
 }
 
 
@@ -166,7 +165,8 @@ void GDExample::_ready()
     const int ROWS = 9;
     const int THICKNESS = 3;
     
-    int next_id = 0;  
+    int next_id = 0;
+     
 
     for (int row = 0; row < ROWS; row++)
     {
@@ -188,6 +188,10 @@ void GDExample::_ready()
                 add_child(tile);
 
                 Tile til;
+
+                til.texture = "icon.svg";
+                til.growth = typesOfSoil::weed;
+
                 // Get current datetime dictionary
                 Dictionary datetime =
                     Time::get_singleton()->get_datetime_dict_from_system();
@@ -200,19 +204,18 @@ void GDExample::_ready()
                 til.second = datetime["second"];
 
                 map_tiles[tile] = til;
-                if(!is_empty()){
                 if (!file.write(reinterpret_cast<char*>(&til), sizeof(Tile))){
-                    //UtilityFunctions::print("adding a child to file", tile->id); 
-
-                }}
+                    UtilityFunctions::print("adding a child to file", tile->id); 
+                }
+                
             }
         }
     }
 
 
 
-    auto map_tile = std::next(map_tiles.begin(), 16);
-    map_tile->second.color = Color(0, 1, 1, 1);
+    //auto map_tile = std::next(map_tiles.begin(), 16);
+   
 
     file.flush();      // make sure data is written
     file.clear();      // clear eof/fail flags
@@ -220,13 +223,36 @@ void GDExample::_ready()
 
 
     Tile p;
+
     auto it = map_tiles.begin();
+
     while (file.read((char*)&p, sizeof(Tile)) && it != map_tiles.end()) {
-        it->second = p;      // Replace the Tile data
-        ++it;
+        it->second = p;
+
+        it->second.type = typesOfSoil::patatoes;
+        String path = "res://assets/" + it->second.texture;
+        
+        UtilityFunctions::printerr("FILE PATH ", it->second.texture);
+        Ref<Texture2D> tex = ResourceLoader::get_singleton()->load(path);
+        if (tex.is_null()) {
+            UtilityFunctions::printerr("Failed to load texture");
+            return;
+        }
+        Vector2 tex_size = tex->get_size();
+        it->first->sprite->set_scale(Vector2(
+            75.0f / tex_size.x,
+            75.0f / tex_size.y
+        ));
+        
+        it->first->sprite->set_texture(tex);
+        it->first->sprite->set_centered(false);
+        it->first->sprite->set_position(Vector2(0, 0));
+        
+        it++;
     }
 
-    file.close();
+    // Tile bloco;
+    // bloco.texture = ResourceLoader::get_singleton()->load("res://icon.svg");
 }
 
 void GDExample::_physics_process(double delta)
@@ -234,10 +260,10 @@ void GDExample::_physics_process(double delta)
     if (!is_inside_tree())
         return;
 
-    line->clear_points();
-    line->set_default_color(Color(0, 0, 0)); // Black
-    line->add_point(Vector2(0, 0));
-    line->add_point(raycast->get_target_position());
+    // line->clear_points();
+    // line->set_default_color(Color(0, 0, 0)); // Black
+    // line->add_point(Vector2(0, 0));
+    // line->add_point(raycast->get_target_position());
 
     // float ray_length = 10.0f;
     // Vector2 mouse = get_global_mouse_position();
@@ -262,60 +288,60 @@ void GDExample::_physics_process(double delta)
     Vector2 mouse = get_global_mouse_position();
 
     raycast->set_global_position(mouse + Vector2(0, -10));
-    raycast->set_target_position(Vector2(0, 20));
+    raycast->set_target_position(Vector2(0, 5));
 
     raycast->force_raycast_update();
 
-    // if (Input::get_singleton()->is_action_pressed("grab"))
-    // {
-    //     if (raycast->is_colliding())
-    //     {
-
-    //         //UtilityFunctions::print("Clicked tile ");
-    //         Object *obj = raycast->get_collider();
-
-    //         if (m_tile *tile = Object::cast_to<m_tile>(obj))
-    //         {
-    //             UtilityFunctions::print("Clicked tile: ", tile->id);
-    //         }
-    //     }
-    // }
-
-    
-    if (Input::get_singleton()->is_action_pressed("grab"))
+    if (Input::get_singleton()->is_action_just_pressed("grab"))
     {
         if (raycast->is_colliding())
         {
-            Object *obj = raycast->get_collider();
 
-            UtilityFunctions::print("Collider class: ", obj->get_class());
+            //UtilityFunctions::print("Clicked tile ");
+            Object *obj = raycast->get_collider();
 
             if (m_tile *tile = Object::cast_to<m_tile>(obj))
             {
                 UtilityFunctions::print("Clicked tile: ", tile->id);
+
+                file.flush();      // make sure data is written
+                file.clear();      // clear eof/fail flags
+                file.seekg(0);
+
+                auto map_tile = std::next(map_tiles.begin(), tile->id);
+                map_tile->second.type = typesOfSoil::patatoes;
+
+                map_tile->second.texture = "icon.svg";
+                String path = "res://assets/" + map_tile->second.texture;
+                Ref<Texture2D> tex = ResourceLoader::get_singleton()->load(path);
+                
+                Vector2 tex_size = tex->get_size();
+                
+                map_tile->first->sprite->set_scale(Vector2(
+                    75.0f / tex_size.x,
+                    75.0f / tex_size.y
+                ));
+                
+                map_tile->first->sprite->set_texture(tex);
+                map_tile->first->sprite->set_centered(false);
+                map_tile->first->sprite->set_position(Vector2(0, 0));
+
+                file.seekp(tile->id * sizeof(Tile), std::ios::beg);
+                file.write(reinterpret_cast<const char*>(&(map_tile->second)), sizeof(Tile));
+
             }
         }
-    }}
+    } 
+    
+    file.flush();      // make sure data is written
+    file.clear();      // clear eof/fail flags
+    file.seekg(0);     // move read position to beginning
+
+    
+}
 
 void GDExample::_input(const Ref<InputEvent> &event)
 {
-
-    // Ref<InputEventMouseButton> mb = event;
-
-    // if (mb.is_valid() &&
-    //     mb->is_pressed() &&
-    //     mb->get_button_index() == MouseButton::MOUSE_BUTTON_LEFT)
-    // {
-    //     raycast->force_raycast_update();
-
-    //     if (raycast->is_colliding())
-    //     {
-    //         if (m_tile *tile = Object::cast_to<m_tile>(raycast->get_collider()))
-    //         {
-    //             UtilityFunctions::print("Clicked tile ", tile->id);
-    //         }
-    //     }
-    // }
 
 }
 
