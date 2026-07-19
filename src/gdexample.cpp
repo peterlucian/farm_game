@@ -35,7 +35,6 @@ enum typesOfSoil{
 
 struct Tile {
 
-    String texture;  
     int type = typesOfSoil::weed;   
     int growth = 1;
     bool occupied = true;
@@ -189,8 +188,8 @@ void GDExample::_ready()
 
                 Tile til;
 
-                til.texture = "icon.svg";
-                til.growth = typesOfSoil::weed;
+                til.type = typesOfSoil::weed;
+                til.growth = 25;
 
                 // Get current datetime dictionary
                 Dictionary datetime =
@@ -229,15 +228,24 @@ void GDExample::_ready()
     while (file.read((char*)&p, sizeof(Tile)) && it != map_tiles.end()) {
         it->second = p;
 
-        it->second.type = typesOfSoil::patatoes;
-        String path = "res://assets/" + it->second.texture;
+        String path;
+
+        switch (it->second.type)
+        {
+        case patatoes:
+            path = "res://assets/icon.svg";
+            break;
+        case weed:
+            path = "res://assets/grass.png";
+            break;
+        default:
+            path = "res://assets/stuff.png";
+            break;
+        } 
         
-        UtilityFunctions::printerr("FILE PATH ", it->second.texture);
+        
         Ref<Texture2D> tex = ResourceLoader::get_singleton()->load(path);
-        if (tex.is_null()) {
-            UtilityFunctions::printerr("Failed to load texture");
-            return;
-        }
+        
         Vector2 tex_size = tex->get_size();
         it->first->sprite->set_scale(Vector2(
             75.0f / tex_size.x,
@@ -311,8 +319,23 @@ void GDExample::_physics_process(double delta)
                 auto map_tile = std::next(map_tiles.begin(), tile->id);
                 map_tile->second.type = typesOfSoil::patatoes;
 
-                map_tile->second.texture = "icon.svg";
-                String path = "res://assets/" + map_tile->second.texture;
+                
+                String path;
+
+                switch (map_tile->second.type)
+                {
+                case patatoes:
+                    path = "res://assets/icon.svg";
+                    break;
+                case weed:
+                    path = "res://assets/grass.png";
+                    break;
+                default:
+                    path = "res://assets/stuff.png";
+                    break;
+                } 
+
+                
                 Ref<Texture2D> tex = ResourceLoader::get_singleton()->load(path);
                 
                 Vector2 tex_size = tex->get_size();
