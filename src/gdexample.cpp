@@ -20,32 +20,15 @@
 #include <godot_cpp/variant/vector2.hpp>
 #include <godot_cpp/classes/resource_loader.hpp>
 #include <godot_cpp/classes/object.hpp>
-
+#include <filesystem>
+#include <utility>
 
 using namespace godot;
 
 void GDExample::_bind_methods() {
 }
 
-enum typesOfSoil{
-    weed,
-    patatoes,
-    bees
-};
 
-struct Tile {
-
-    int type = typesOfSoil::weed;   
-    int growth = 1;
-    bool occupied = true;
-    int year;
-    int month;
-    int day;
-    int hour;
-    int minute;
-    int second;
-
-};
 
 struct CompareTile{
     bool operator()(const m_tile* a, const m_tile* b) const {
@@ -80,6 +63,35 @@ GDExample::~GDExample() {
     file.close();
 }
 
+void GDExample::update_tile_sprite(m_tile *tile, const Tile &data)
+{
+    String path;
+
+    switch (data.type) {
+    case patatoes:
+        path = "res://assets/icon.svg";
+        break;
+    case weed:
+        path = "res://assets/grass.png";
+        break;
+    default:
+        path = "res://assets/stuff.png";
+        break;
+    }
+
+    Ref<Texture2D> tex = ResourceLoader::get_singleton()->load(path);
+        
+    Vector2 tex_size = tex->get_size();
+
+    tile->sprite->set_scale(Vector2(
+        75.0f / tex_size.x,
+        75.0f / tex_size.y
+    ));
+
+    tile->sprite->set_texture(tex);
+    tile->sprite->set_centered(false);
+    tile->sprite->set_position(Vector2(0, 0));
+}
 
 void GDExample::_ready()
 {
@@ -89,9 +101,6 @@ void GDExample::_ready()
     raycast = get_node<RayCast2D>("../RayCast2D");
     line = get_node<Line2D>("../RayCast2D/Line2D");
 
-    line->clear_points();
-    line->add_point(Vector2(0, 0));
-    line->add_point(raycast->get_target_position());
    
     //file.open("save.txt", std::ios::in | std::ios::out | std::ios::trunc);
 	 // If file doesn't exist, create it
@@ -108,63 +117,14 @@ void GDExample::_ready()
         std::cout << "Failed to open file\n";
     }
 
-    //UtilityFunctions::print("I am: ", get_path());
-
-    // UtilityFunctions::print("Children: ", get_child_count());
-
-    // for (int i = 0; i < get_child_count(); i++) {
-    //     Node *child = get_child(i);
-    //     UtilityFunctions::print("Child ", i, ": ", child->get_name(), " path=", child->get_path());
-    // }
-    
-    //Tile tile;
-    //  // Get current datetime dictionary
-    // Dictionary datetime =
-    //     Time::get_singleton()->get_datetime_dict_from_system();
-
-    // tile.year   = datetime["year"];
-    // tile.month  = datetime["month"];
-    // tile.day    = datetime["day"];
-    // tile.hour   = datetime["hour"];
-    // tile.minute = datetime["minute"];
-    // tile.second = datetime["second"];
-
-    // int count = 1;
-    // while (count <= 30)
-    // {
-    //     if (!file.write(reinterpret_cast<char*>(&tile), sizeof(Tile)))
-    //     {
-    //         UtilityFunctions::print("WRITE FAILED");
-    //         break;
-    //     }
-
-    //     count++;
-    // }}
-
-    // file.flush();      // make sure data is written
-    // file.clear();      // clear eof/fail flags
-    // file.seekg(0);     // move read position to beginning
-
-    // Tile p;
-    // std::vector<Tile> tiles;
-    // while (file.read((char*)&p, sizeof(Tile))){   
-    //     tiles.push_back(p);
-    //     UtilityFunctions::print("inside vector"); 
-    // }
-
-   
-    // const int CELL_SIZE = 50;
-    // const int COLS = 25;
-    // const int ROWS = 14;
-    // const int THICKNESS = 4;
-    // const int OFFSET = 25;
-
     const int CELL_SIZE = 75;
     const int COLS = 17;
     const int ROWS = 9;
     const int THICKNESS = 3;
     
     int next_id = 0;
+
+    
      
 
     for (int row = 0; row < ROWS; row++)
@@ -181,13 +141,11 @@ void GDExample::_ready()
                 m_tile *tile = memnew(m_tile);
                 tile->set_position(Vector2(col * CELL_SIZE, row * CELL_SIZE ));
                 tile->id = next_id++;
-                //UtilityFunctions::print("adding a child", tile->id); 
-                //UtilityFunctions::print(Vector2(col * CELL_SIZE, row * CELL_SIZE)); 
+        
+                add_child(tile);       
                 
-                add_child(tile);
-
                 Tile til;
-
+                
                 til.type = typesOfSoil::weed;
                 til.growth = 25;
 
@@ -203,14 +161,122 @@ void GDExample::_ready()
                 til.second = datetime["second"];
 
                 map_tiles[tile] = til;
-                if (!file.write(reinterpret_cast<char*>(&til), sizeof(Tile))){
-                    UtilityFunctions::print("adding a child to file", tile->id); 
-                }
+                
                 
             }
         }
     }
 
+    size_t tile_count = map_tiles.size();
+    size_t expected_size = tile_count * sizeof(Tile);
+    bool save_exists =
+    std::filesystem::exists("save.txt") &&
+    std::filesystem::file_size("save.txt") == expected_size;
+
+    
+  auto it = map_tiles.begin();
+
+    if (save_exists) {
+
+        Tile p;
+
+        while (it != map_tiles.end() &&
+            file.read(reinterpret_cast<char*>(&p), sizeof(Tile))) {
+
+            it->second = p;
+            update_tile_sprite(it->first, it->second);
+            ++it;
+        }
+        UtilityFunctions::print("im inside true save existss");
+
+    } else {
+
+        for (auto &entry : map_tiles) {
+
+            Tile &tile = entry.second;
+
+            tile.type = typesOfSoil::weed;
+            tile.growth = 25;
+
+            Dictionary datetime =
+                Time::get_singleton()->get_datetime_dict_from_system();
+
+            tile.year   = datetime["year"];
+            tile.month  = datetime["month"];
+            tile.day    = datetime["day"];
+            tile.hour   = datetime["hour"];
+            tile.minute = datetime["minute"];
+            tile.second = datetime["second"];
+
+            file.write(reinterpret_cast<const char*>(&tile), sizeof(Tile));
+
+            update_tile_sprite(entry.first, entry.second);
+        }
+        UtilityFunctions::print("im inside false save existss");
+        file.flush();
+    }
+
+
+    // Tile p;
+
+    // UtilityFunctions::print("expected size", expected_size);
+    
+    // auto it = map_tiles.begin();
+    // if (save_exists){
+    //     while (file.read((char*)&p, sizeof(Tile)) && it != map_tiles.end()) {
+    //         UtilityFunctions::print("im inside true save existss");
+    //         it->second = p;
+
+    //         String path;
+
+    //         switch (it->second.type)
+    //         {
+    //         case patatoes:
+    //             path = "res://assets/icon.svg";
+    //             break;
+    //         case weed:
+    //             path = "res://assets/grass.png";
+    //             break;
+    //         default:
+    //             path = "res://assets/stuff.png";
+    //             break;
+    //         } 
+            
+            
+    //         Ref<Texture2D> tex = ResourceLoader::get_singleton()->load(path);
+            
+    //         Vector2 tex_size = tex->get_size();
+    //         it->first->sprite->set_scale(Vector2(
+    //             75.0f / tex_size.x,
+    //             75.0f / tex_size.y
+    //         ));
+            
+    //         it->first->sprite->set_texture(tex);
+    //         it->first->sprite->set_centered(false);
+    //         it->first->sprite->set_position(Vector2(0, 0));
+    //         it++;
+
+    //         }
+    // } else {
+    //     UtilityFunctions::print("im inside false save existss");
+
+    //     Tile till;
+    //     till.type = typesOfSoil::weed;
+    //     till.growth = 25;
+
+    //     // Get current datetime dictionary
+    //     Dictionary datetime =
+    //         Time::get_singleton()->get_datetime_dict_from_system();
+
+    //     till.year   = datetime["year"];
+    //     till.month  = datetime["month"];
+    //     till.day    = datetime["day"];
+    //     till.hour   = datetime["hour"];
+    //     till.minute = datetime["minute"];
+    //     till.second = datetime["second"];
+
+    //     file.write(reinterpret_cast<char*>(&till), sizeof(Tile));
+    // }
 
 
     //auto map_tile = std::next(map_tiles.begin(), 16);
@@ -220,47 +286,7 @@ void GDExample::_ready()
     file.clear();      // clear eof/fail flags
     file.seekg(0);     // move read position to beginning
 
-
-    Tile p;
-
-    auto it = map_tiles.begin();
-
-    while (file.read((char*)&p, sizeof(Tile)) && it != map_tiles.end()) {
-        it->second = p;
-
-        String path;
-
-        switch (it->second.type)
-        {
-        case patatoes:
-            path = "res://assets/icon.svg";
-            break;
-        case weed:
-            path = "res://assets/grass.png";
-            break;
-        default:
-            path = "res://assets/stuff.png";
-            break;
-        } 
-        
-        
-        Ref<Texture2D> tex = ResourceLoader::get_singleton()->load(path);
-        
-        Vector2 tex_size = tex->get_size();
-        it->first->sprite->set_scale(Vector2(
-            75.0f / tex_size.x,
-            75.0f / tex_size.y
-        ));
-        
-        it->first->sprite->set_texture(tex);
-        it->first->sprite->set_centered(false);
-        it->first->sprite->set_position(Vector2(0, 0));
-        
-        it++;
-    }
-
-    // Tile bloco;
-    // bloco.texture = ResourceLoader::get_singleton()->load("res://icon.svg");
+    
 }
 
 void GDExample::_physics_process(double delta)
@@ -273,25 +299,6 @@ void GDExample::_physics_process(double delta)
     // line->add_point(Vector2(0, 0));
     // line->add_point(raycast->get_target_position());
 
-    // float ray_length = 10.0f;
-    // Vector2 mouse = get_global_mouse_position();
-    // // Direction from the player to the mouse
-    // Vector2 dir = mouse - get_global_position();
-    // // Point the ray toward the mouse
-    
-    //float ray_length = 300.0f;
-
-    // Vector2 mouse = get_global_mouse_position();
-    // Vector2 direction = (mouse - raycast->get_global_position()).normalized();
-
-    // raycast->set_target_position(direction * ray_length);
-    
-    // Vector2 mouse = get_global_mouse_position();
-    // raycast->set_global_position(mouse);
-    
-    // // Example: point to the right
-    // raycast->set_target_position(Vector2(0, 10));
-    // raycast->force_raycast_update();
 
     Vector2 mouse = get_global_mouse_position();
 
@@ -350,7 +357,11 @@ void GDExample::_physics_process(double delta)
                 map_tile->first->sprite->set_position(Vector2(0, 0));
 
                 file.seekp(tile->id * sizeof(Tile), std::ios::beg);
-                file.write(reinterpret_cast<const char*>(&(map_tile->second)), sizeof(Tile));
+                file.write(reinterpret_cast<char*>(&map_tile->second), sizeof(Tile));
+                
+                if (file.fail()) {
+                    UtilityFunctions::printerr("Write failed");
+                }
 
             }
         }
