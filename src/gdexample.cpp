@@ -91,23 +91,12 @@ void GDExample::update_tile_sprite(m_tile *tile, const TileType &data)
     }
 
     Ref<Texture2D> tex = ResourceLoader::get_singleton()->load(texture_paths[index]);
-    
-    if (tex.is_null()) {
-        UtilityFunctions::printerr("Failed to load texture: ", texture_paths[index]);
-        return;
-    }
 
     Vector2 tex_size = tex->get_size();
-
     tile->sprite->set_scale(Vector2(
         75.0f / tex_size.x,
         75.0f / tex_size.y
     ));
-
-    if (tile->sprite == nullptr) {
-        UtilityFunctions::printerr("Sprite is null!");
-        return;
-    }
 
     tile->sprite->set_texture(tex);
     tile->sprite->set_centered(false);
