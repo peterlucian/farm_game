@@ -217,67 +217,6 @@ void GDExample::_ready()
     }
 
 
-    // Tile p;
-
-    // UtilityFunctions::print("expected size", expected_size);
-    
-    // auto it = map_tiles.begin();
-    // if (save_exists){
-    //     while (file.read((char*)&p, sizeof(Tile)) && it != map_tiles.end()) {
-    //         UtilityFunctions::print("im inside true save existss");
-    //         it->second = p;
-
-    //         String path;
-
-    //         switch (it->second.type)
-    //         {
-    //         case patatoes:
-    //             path = "res://assets/icon.svg";
-    //             break;
-    //         case weed:
-    //             path = "res://assets/grass.png";
-    //             break;
-    //         default:
-    //             path = "res://assets/stuff.png";
-    //             break;
-    //         } 
-            
-            
-    //         Ref<Texture2D> tex = ResourceLoader::get_singleton()->load(path);
-            
-    //         Vector2 tex_size = tex->get_size();
-    //         it->first->sprite->set_scale(Vector2(
-    //             75.0f / tex_size.x,
-    //             75.0f / tex_size.y
-    //         ));
-            
-    //         it->first->sprite->set_texture(tex);
-    //         it->first->sprite->set_centered(false);
-    //         it->first->sprite->set_position(Vector2(0, 0));
-    //         it++;
-
-    //         }
-    // } else {
-    //     UtilityFunctions::print("im inside false save existss");
-
-    //     Tile till;
-    //     till.type = typesOfSoil::weed;
-    //     till.growth = 25;
-
-    //     // Get current datetime dictionary
-    //     Dictionary datetime =
-    //         Time::get_singleton()->get_datetime_dict_from_system();
-
-    //     till.year   = datetime["year"];
-    //     till.month  = datetime["month"];
-    //     till.day    = datetime["day"];
-    //     till.hour   = datetime["hour"];
-    //     till.minute = datetime["minute"];
-    //     till.second = datetime["second"];
-
-    //     file.write(reinterpret_cast<char*>(&till), sizeof(Tile));
-    // }
-
 
     //auto map_tile = std::next(map_tiles.begin(), 16);
    
@@ -324,37 +263,9 @@ void GDExample::_physics_process(double delta)
                 file.seekg(0);
 
                 auto map_tile = std::next(map_tiles.begin(), tile->id);
-                map_tile->second.type = typesOfSoil::patatoes;
+                map_tile->second.type = typesOfSoil::patatoes;      
 
-                
-                String path;
-
-                switch (map_tile->second.type)
-                {
-                case patatoes:
-                    path = "res://assets/icon.svg";
-                    break;
-                case weed:
-                    path = "res://assets/grass.png";
-                    break;
-                default:
-                    path = "res://assets/stuff.png";
-                    break;
-                } 
-
-                
-                Ref<Texture2D> tex = ResourceLoader::get_singleton()->load(path);
-                
-                Vector2 tex_size = tex->get_size();
-                
-                map_tile->first->sprite->set_scale(Vector2(
-                    75.0f / tex_size.x,
-                    75.0f / tex_size.y
-                ));
-                
-                map_tile->first->sprite->set_texture(tex);
-                map_tile->first->sprite->set_centered(false);
-                map_tile->first->sprite->set_position(Vector2(0, 0));
+                update_tile_sprite(map_tile->first, map_tile->second);
 
                 file.seekp(tile->id * sizeof(Tile), std::ios::beg);
                 file.write(reinterpret_cast<char*>(&map_tile->second), sizeof(Tile));
