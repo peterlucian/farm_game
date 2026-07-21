@@ -13,7 +13,6 @@ config_version=5
 config/name="demo"
 run/main_scene="uid://dvgdgi3jrhrvt"
 config/features=PackedStringArray("4.6", "Mobile")
-config/icon="res://assets/icon.svg"
 
 [display]
 

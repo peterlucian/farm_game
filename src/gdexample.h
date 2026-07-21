@@ -12,24 +12,17 @@
 
 namespace godot {
 
-	enum typesOfSoil{
-    weed,
-    patatoes,
-    bees
-};
-
-struct Tile {
-
-    int type = typesOfSoil::weed;   
-    int growth = 1;
-    bool occupied = true;
-    int year;
-    int month;
-    int day;
-    int hour;
-    int minute;
-    int second;
-
+enum TileType {
+    POTATO,
+    BEE,
+    WEED,
+    CARROT,
+    CORN,
+    APPLE,
+    CHICKEN,
+    COW,
+    SHEEP,
+    TREE
 };
 
 class GDExample : public Node2D {
@@ -53,7 +46,7 @@ public:
 	
 	bool is_empty();
 	//void update_tile_sprite(std::pair<m_tile * const, Tile> &entry);
-	void update_tile_sprite(m_tile *tile, const Tile &data);
+	void update_tile_sprite(m_tile *tile, const TileType &data);
 	std::fstream file;
 	
 	void _input(const Ref<InputEvent> &event) override;

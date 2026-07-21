@@ -2,6 +2,8 @@
 
 [node name="main" type="Node2D" unique_id=1245298982]
 
+[node name="GDExample" type="GDExample" parent="." unique_id=1617061937]
+
 [node name="RayCast2D" type="RayCast2D" parent="." unique_id=1019127577]
 exclude_parent = false
 target_position = Vector2(-92, -88)
@@ -13,5 +15,3 @@ collide_with_bodies = false
 points = PackedVector2Array(111, 203)
 width = 5.0
 default_color = Color(0.20392157, 1, 1, 1)
-
-[node name="GDExample" type="GDExample" parent="." unique_id=1137800772]

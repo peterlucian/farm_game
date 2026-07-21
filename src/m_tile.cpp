@@ -29,7 +29,7 @@ void m_tile::_ready()
     
     sprite = memnew(Sprite2D);
     // Load texture
-    Ref<Texture2D> tex = ResourceLoader::get_singleton()->load("res://assets/grass.png");
+    Ref<Texture2D> tex = ResourceLoader::get_singleton()->load("res://assets/corn.png");
     Vector2 tex_size = tex->get_size();
     
     sprite->set_scale(Vector2(

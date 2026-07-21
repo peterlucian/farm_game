@@ -1,15 +1,15 @@
 #include "gdexample.h"
 #include "m_tile.h"
+#include <vector>
+#include <random>
+#include <algorithm>
+#include <filesystem>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/classes/node2d.hpp>
 #include <godot_cpp/classes/color_rect.hpp>
 #include <godot_cpp/variant/color.hpp>
-#include <godot_cpp/classes/time.hpp>
 #include <fstream>
-#include <godot_cpp/variant/dictionary.hpp>
 #include <iostream>
-#include <vector>
-#include <string>
 #include <godot_cpp/classes/input.hpp>
 #include <godot_cpp/classes/input_event_mouse_button.hpp>
 #include <godot_cpp/variant/utility_functions.hpp>
@@ -20,8 +20,9 @@
 #include <godot_cpp/variant/vector2.hpp>
 #include <godot_cpp/classes/resource_loader.hpp>
 #include <godot_cpp/classes/object.hpp>
-#include <filesystem>
 #include <utility>
+#include <iterator>
+
 
 using namespace godot;
 
@@ -36,7 +37,7 @@ struct CompareTile{
     }
 };
 
-std::map<m_tile*, Tile, CompareTile> map_tiles;
+std::map<m_tile*, TileType, CompareTile> map_tiles;
 
 GDExample::GDExample() 
     /* : file("save.txt", std::ios::in | std::ios::out | std::ios::trunc)*/ {
@@ -63,24 +64,39 @@ GDExample::~GDExample() {
     file.close();
 }
 
-void GDExample::update_tile_sprite(m_tile *tile, const Tile &data)
-{
-    String path;
+    
 
-    switch (data.type) {
-    case patatoes:
-        path = "res://assets/icon.svg";
-        break;
-    case weed:
-        path = "res://assets/grass.png";
-        break;
-    default:
-        path = "res://assets/stuff.png";
-        break;
+void GDExample::update_tile_sprite(m_tile *tile, const TileType &data)
+{
+    const String texture_paths[] = {
+        "res://assets/potato.png",
+        "res://assets/bee.png",
+        "res://assets/weed.png",
+        "res://assets/carrot.png",
+        "res://assets/corn.png",
+        "res://assets/apple.png",
+        "res://assets/chicken.png",
+        "res://assets/cow.png",
+        "res://assets/sheep.png",
+        "res://assets/tree.png"
+    };
+    
+    constexpr int TEXTURE_COUNT = 10;
+
+    int index = static_cast<int>(data);
+
+    if (index < 0 || index >= TEXTURE_COUNT) {
+        UtilityFunctions::printerr("Invalid TileType: ", index);
+        return;
     }
 
-    Ref<Texture2D> tex = ResourceLoader::get_singleton()->load(path);
-        
+    Ref<Texture2D> tex = ResourceLoader::get_singleton()->load(texture_paths[index]);
+    
+    if (tex.is_null()) {
+        UtilityFunctions::printerr("Failed to load texture: ", texture_paths[index]);
+        return;
+    }
+
     Vector2 tex_size = tex->get_size();
 
     tile->sprite->set_scale(Vector2(
@@ -88,23 +104,28 @@ void GDExample::update_tile_sprite(m_tile *tile, const Tile &data)
         75.0f / tex_size.y
     ));
 
+    if (tile->sprite == nullptr) {
+        UtilityFunctions::printerr("Sprite is null!");
+        return;
+    }
+
     tile->sprite->set_texture(tex);
     tile->sprite->set_centered(false);
     tile->sprite->set_position(Vector2(0, 0));
 }
 
+
+
 void GDExample::_ready()
 {
-    if (!is_inside_tree())
-        return;
-    
+   
     raycast = get_node<RayCast2D>("../RayCast2D");
     line = get_node<Line2D>("../RayCast2D/Line2D");
 
    
     //file.open("save.txt", std::ios::in | std::ios::out | std::ios::trunc);
 	 // If file doesn't exist, create it
-   #include <filesystem>
+   
 
     if (!std::filesystem::exists("save.txt")) {
         std::ofstream create("save.txt", std::ios::binary);
@@ -118,25 +139,22 @@ void GDExample::_ready()
     }
 
     const int CELL_SIZE = 75;
-    const int COLS = 17;
-    const int ROWS = 9;
+    const int COLS = 5;
+    const int ROWS = 4;
     const int THICKNESS = 3;
     
     int next_id = 0;
-
-    
-     
 
     for (int row = 0; row < ROWS; row++)
     {
         for (int col = 0; col < COLS; col++)
         {
-            bool draw =
-                (col < THICKNESS) ||                      // Left side
-                (col >= COLS - THICKNESS) ||             // Right side
-                (row >= ROWS - THICKNESS);               // Bottom
+            // bool draw =
+            //     (col < THICKNESS) ||                      // Left side
+            //     (col >= COLS - THICKNESS) ||             // Right side
+            //     (row >= ROWS - THICKNESS);               // Bottom
             
-            if (draw)
+            if (true)
             {
                 m_tile *tile = memnew(m_tile);
                 tile->set_position(Vector2(col * CELL_SIZE, row * CELL_SIZE ));
@@ -144,44 +162,46 @@ void GDExample::_ready()
         
                 add_child(tile);       
                 
-                Tile til;
-                
-                til.type = typesOfSoil::weed;
-                til.growth = 25;
-
-                // Get current datetime dictionary
-                Dictionary datetime =
-                    Time::get_singleton()->get_datetime_dict_from_system();
-
-                til.year   = datetime["year"];
-                til.month  = datetime["month"];
-                til.day    = datetime["day"];
-                til.hour   = datetime["hour"];
-                til.minute = datetime["minute"];
-                til.second = datetime["second"];
-
-                map_tiles[tile] = til;
+                TileType icon = TileType::APPLE;
+                map_tiles[tile] = icon;
                 
                 
             }
         }
     }
 
+    std::vector<TileType> types;
+    for (int i = 0; i < 10; i++) {
+        types.push_back(static_cast<TileType>(i));
+        types.push_back(static_cast<TileType>(i));
+    }
+    
+
+    UtilityFunctions::print("mnaptiles", map_tiles.size());
+    UtilityFunctions::print("tiles", types.size());
+   
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+
+    std::shuffle(types.begin(), types.end(), gen);
+
     size_t tile_count = map_tiles.size();
-    size_t expected_size = tile_count * sizeof(Tile);
+    size_t expected_size = tile_count * sizeof(TileType);
     bool save_exists =
     std::filesystem::exists("save.txt") &&
     std::filesystem::file_size("save.txt") == expected_size;
 
+    file.clear();
     
-  auto it = map_tiles.begin();
-
     if (save_exists) {
-
-        Tile p;
+        
+        file.seekg(0, std::ios::beg);
+        TileType p;
+        auto it = map_tiles.begin();
 
         while (it != map_tiles.end() &&
-            file.read(reinterpret_cast<char*>(&p), sizeof(Tile))) {
+            file.read(reinterpret_cast<char*>(&p), sizeof(TileType))) {
 
             it->second = p;
             update_tile_sprite(it->first, it->second);
@@ -190,29 +210,20 @@ void GDExample::_ready()
         UtilityFunctions::print("im inside true save existss");
 
     } else {
+        
+        file.seekp(0, std::ios::beg);
+        int index = 0;
 
         for (auto &entry : map_tiles) {
 
-            Tile &tile = entry.second;
+            entry.second = types[index++];
 
-            tile.type = typesOfSoil::weed;
-            tile.growth = 25;
-
-            Dictionary datetime =
-                Time::get_singleton()->get_datetime_dict_from_system();
-
-            tile.year   = datetime["year"];
-            tile.month  = datetime["month"];
-            tile.day    = datetime["day"];
-            tile.hour   = datetime["hour"];
-            tile.minute = datetime["minute"];
-            tile.second = datetime["second"];
-
-            file.write(reinterpret_cast<const char*>(&tile), sizeof(Tile));
+            file.write(reinterpret_cast<const char*>(&entry.second), sizeof(TileType));
 
             update_tile_sprite(entry.first, entry.second);
         }
         UtilityFunctions::print("im inside false save existss");
+        
         file.flush();
     }
 
@@ -263,12 +274,12 @@ void GDExample::_physics_process(double delta)
                 file.seekg(0);
 
                 auto map_tile = std::next(map_tiles.begin(), tile->id);
-                map_tile->second.type = typesOfSoil::patatoes;      
+                map_tile->second = TileType::BEE;      
 
                 update_tile_sprite(map_tile->first, map_tile->second);
 
-                file.seekp(tile->id * sizeof(Tile), std::ios::beg);
-                file.write(reinterpret_cast<char*>(&map_tile->second), sizeof(Tile));
+                file.seekp(tile->id * sizeof(TileType), std::ios::beg);
+                file.write(reinterpret_cast<char*>(&map_tile->second), sizeof(TileType));
                 
                 if (file.fail()) {
                     UtilityFunctions::printerr("Write failed");
