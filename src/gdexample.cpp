@@ -104,17 +104,17 @@ void GDExample::_ready()
    
     //file.open("save.txt", std::ios::in | std::ios::out | std::ios::trunc);
 	 // If file doesn't exist, create it
-    if (!file.is_open())
-    {
-        file.open("save.txt", std::ios::out);
-        file.close();
+   #include <filesystem>
 
-        file.open("save.txt", std::ios::in | std::ios::out | std::ios::binary);
+    if (!std::filesystem::exists("save.txt")) {
+        std::ofstream create("save.txt", std::ios::binary);
+        create.close();
     }
-	if (!file.is_open())
-    {
-        UtilityFunctions::print("Failed to open file");
-        std::cout << "Failed to open file\n";
+
+    file.open("save.txt", std::ios::binary | std::ios::in | std::ios::out);
+
+    if (!file.is_open()) {
+        UtilityFunctions::printerr("Failed to open file");
     }
 
     const int CELL_SIZE = 75;
