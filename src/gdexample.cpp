@@ -26,8 +26,12 @@
 
 using namespace godot;
 
+
 void GDExample::_bind_methods() {
+    ClassDB::bind_method(D_METHOD("_on_preview_timeout"),
+                         &GDExample::_on_preview_timeout);
 }
+
 
 
 
@@ -37,7 +41,7 @@ struct CompareTile{
     }
 };
 
-std::map<m_tile*, TileType, CompareTile> map_tiles;
+std::map<m_tile*, TileData, CompareTile> map_tiles;
 
 GDExample::GDExample() 
     /* : file("save.txt", std::ios::in | std::ios::out | std::ios::trunc)*/ {
@@ -66,7 +70,7 @@ GDExample::~GDExample() {
 
     
 
-void GDExample::update_tile_sprite(m_tile *tile, const TileType &data)
+void GDExample::update_tile_sprite(m_tile *tile, const TileData &data)
 {
     const String texture_paths[] = {
         "res://assets/potato.png",
@@ -81,33 +85,61 @@ void GDExample::update_tile_sprite(m_tile *tile, const TileType &data)
         "res://assets/tree.png"
     };
     
+    int index = static_cast<int>(data.type);
     constexpr int TEXTURE_COUNT = 10;
+    if (data.state == FACE_DOWN)
+        {
+            Ref<Texture2D> tex = ResourceLoader::get_singleton()->load("res://assets/back.png");
+        } else {
+        
+        if (index < 0 || index >= TEXTURE_COUNT) {
+            UtilityFunctions::printerr("Invalid TileType: ", index);
+            return;
+        }
 
-    int index = static_cast<int>(data);
+        Ref<Texture2D> tex = ResourceLoader::get_singleton()->load(texture_paths[index]);
 
-    if (index < 0 || index >= TEXTURE_COUNT) {
-        UtilityFunctions::printerr("Invalid TileType: ", index);
-        return;
+        Vector2 tex_size = tex->get_size();
+        tile->sprite->set_scale(Vector2(
+            75.0f / tex_size.x,
+            75.0f / tex_size.y
+        ));
+
+        tile->sprite->set_texture(tex);
+        tile->sprite->set_centered(false);
+        tile->sprite->set_position(Vector2(0, 0));
     }
-
-    Ref<Texture2D> tex = ResourceLoader::get_singleton()->load(texture_paths[index]);
-
-    Vector2 tex_size = tex->get_size();
-    tile->sprite->set_scale(Vector2(
-        75.0f / tex_size.x,
-        75.0f / tex_size.y
-    ));
-
-    tile->sprite->set_texture(tex);
-    tile->sprite->set_centered(false);
-    tile->sprite->set_position(Vector2(0, 0));
 }
 
+void GDExample::_on_preview_timeout()
+{
+    UtilityFunctions::print("5 seconds have passed!");
 
+    for (auto &entry : map_tiles)
+    {
+        // Turn every card face down
+        entry.first->sprite->set_texture(
+            ResourceLoader::get_singleton()->load("res://assets/back.png")
+        );
+    }
+}
 
 void GDExample::_ready()
 {
-   
+    
+    preview_timer = memnew(Timer);
+    preview_timer->set_wait_time(5.0);
+    preview_timer->set_one_shot(true);
+
+    add_child(preview_timer);
+
+    preview_timer->connect(
+        "timeout",
+        Callable(this, "_on_preview_timeout")
+    );
+
+    preview_timer->start();
+
     raycast = get_node<RayCast2D>("../RayCast2D");
     line = get_node<Line2D>("../RayCast2D/Line2D");
 
@@ -151,7 +183,7 @@ void GDExample::_ready()
         
                 add_child(tile);       
                 
-                TileType icon = TileType::APPLE;
+                TileData icon = {TileType::APPLE, CardState::FACE_UP};
                 map_tiles[tile] = icon;
                 
                 
@@ -192,7 +224,7 @@ void GDExample::_ready()
         while (it != map_tiles.end() &&
             file.read(reinterpret_cast<char*>(&p), sizeof(TileType))) {
 
-            it->second = p;
+            it->second.type = p;
             update_tile_sprite(it->first, it->second);
             ++it;
         }
@@ -205,7 +237,7 @@ void GDExample::_ready()
 
         for (auto &entry : map_tiles) {
 
-            entry.second = types[index++];
+            entry.second.type = types[index++];
 
             file.write(reinterpret_cast<const char*>(&entry.second), sizeof(TileType));
 
@@ -263,8 +295,9 @@ void GDExample::_physics_process(double delta)
                 file.seekg(0);
 
                 auto map_tile = std::next(map_tiles.begin(), tile->id);
-                map_tile->second = TileType::BEE;      
+                //map_tile->second.type = TileType::BEE;      
 
+                map_tile->second.state = FACE_UP;
                 update_tile_sprite(map_tile->first, map_tile->second);
 
                 file.seekp(tile->id * sizeof(TileType), std::ios::beg);
