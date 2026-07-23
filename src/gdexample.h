@@ -7,7 +7,10 @@
 #include <fstream>
 #include <godot_cpp/classes/line2d.hpp>
 #include <utility>
+#include <godot_cpp/classes/texture2d.hpp>
 #include <godot_cpp/classes/timer.hpp>
+#include <godot_cpp/core/class_db.hpp>
+#include <godot_cpp/classes/ref.hpp>
 #include "m_tile.h"
 
 
@@ -55,6 +58,14 @@ public:
 	RayCast2D *raycast = nullptr;
 	Line2D *line = nullptr;
 	Timer *preview_timer = nullptr;
+	Timer *hide_timer = nullptr;
+	
+	m_tile *first_selected = nullptr;
+	m_tile *second_selected = nullptr;
+	
+	Ref<Texture2D> tex = nullptr;
+
+	bool waiting_for_hide = false;
 
 	void _ready();
 	void _process(double delta) override;
@@ -62,7 +73,9 @@ public:
 	bool is_empty();
 	//void update_tile_sprite(std::pair<m_tile * const, Tile> &entry);
 	void update_tile_sprite(m_tile *tile, const TileData &data);
+	void _on_hide_timeout();
 	void _on_preview_timeout();
+	void check_pair();
 
 	std::fstream file;
 	

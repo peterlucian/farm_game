@@ -30,6 +30,8 @@ using namespace godot;
 void GDExample::_bind_methods() {
     ClassDB::bind_method(D_METHOD("_on_preview_timeout"),
                          &GDExample::_on_preview_timeout);
+    ClassDB::bind_method(D_METHOD("_on_hide_timeout"),
+                         &GDExample::_on_hide_timeout);
 }
 
 
@@ -89,15 +91,17 @@ void GDExample::update_tile_sprite(m_tile *tile, const TileData &data)
     constexpr int TEXTURE_COUNT = 10;
     if (data.state == FACE_DOWN)
         {
-            Ref<Texture2D> tex = ResourceLoader::get_singleton()->load("res://assets/back.png");
+            tex = ResourceLoader::get_singleton()->load("res://assets/black.png");
+
         } else {
         
         if (index < 0 || index >= TEXTURE_COUNT) {
             UtilityFunctions::printerr("Invalid TileType: ", index);
             return;
         }
+            tex = ResourceLoader::get_singleton()->load(texture_paths[index]);
 
-        Ref<Texture2D> tex = ResourceLoader::get_singleton()->load(texture_paths[index]);
+        }
 
         Vector2 tex_size = tex->get_size();
         tile->sprite->set_scale(Vector2(
@@ -109,7 +113,7 @@ void GDExample::update_tile_sprite(m_tile *tile, const TileData &data)
         tile->sprite->set_centered(false);
         tile->sprite->set_position(Vector2(0, 0));
     }
-}
+
 
 void GDExample::_on_preview_timeout()
 {
@@ -117,11 +121,36 @@ void GDExample::_on_preview_timeout()
 
     for (auto &entry : map_tiles)
     {
+        tex = ResourceLoader::get_singleton()->load("res://assets/black.png");
+        Vector2 tex_size = tex->get_size();
+        entry.first->sprite->set_scale(Vector2(
+            75.0f / tex_size.x,
+            75.0f / tex_size.y
+        ));
+        
         // Turn every card face down
-        entry.first->sprite->set_texture(
-            ResourceLoader::get_singleton()->load("res://assets/back.png")
-        );
+        entry.first->sprite->set_texture(tex);
+       
+        entry.first->sprite->set_centered(false);
+        entry.first->sprite->set_position(Vector2(0, 0));
     }
+}
+
+void GDExample::_on_hide_timeout()
+{
+    auto &first = map_tiles[first_selected];
+    auto &second = map_tiles[second_selected];
+
+    first.state = FACE_DOWN;
+    second.state = FACE_DOWN;
+
+    update_tile_sprite(first_selected, first);
+    update_tile_sprite(second_selected, second);
+
+    first_selected = nullptr;
+    second_selected = nullptr;
+
+     waiting_for_hide = false;
 }
 
 void GDExample::_ready()
@@ -131,11 +160,21 @@ void GDExample::_ready()
     preview_timer->set_wait_time(5.0);
     preview_timer->set_one_shot(true);
 
+    hide_timer = memnew(Timer);
+    hide_timer->set_wait_time(1.0);
+    hide_timer->set_one_shot(true);
+    
     add_child(preview_timer);
+    add_child(hide_timer);
 
     preview_timer->connect(
         "timeout",
         Callable(this, "_on_preview_timeout")
+    );
+    
+    hide_timer->connect(
+        "timeout",
+        Callable(this, "_on_hide_timeout")
     );
 
     preview_timer->start();
@@ -260,6 +299,28 @@ void GDExample::_ready()
     
 }
 
+void GDExample::check_pair()
+{
+    auto &first = map_tiles[first_selected];
+    auto &second = map_tiles[second_selected];
+
+    if (first.type == second.type)
+    {
+        first.state = MATCHED;
+        second.state = MATCHED;
+
+        first_selected = nullptr;
+        second_selected = nullptr;
+    }
+    else
+    {
+        waiting_for_hide = true;
+        hide_timer->start();
+    }
+
+    
+}
+
 void GDExample::_physics_process(double delta)
 {
     if (!is_inside_tree())
@@ -277,6 +338,9 @@ void GDExample::_physics_process(double delta)
     raycast->set_target_position(Vector2(0, 5));
 
     raycast->force_raycast_update();
+    
+    if (waiting_for_hide)
+        return;
 
     if (Input::get_singleton()->is_action_just_pressed("grab"))
     {
@@ -297,7 +361,25 @@ void GDExample::_physics_process(double delta)
                 auto map_tile = std::next(map_tiles.begin(), tile->id);
                 //map_tile->second.type = TileType::BEE;      
 
-                map_tile->second.state = FACE_UP;
+                //map_tile->second.state = FACE_UP;
+                
+                if (first_selected == nullptr)
+                {
+                    first_selected = tile;
+                    
+                    map_tiles[tile].state = FACE_UP;
+                    update_tile_sprite(tile, map_tiles[tile]);
+                }
+                else if (second_selected == nullptr && tile != first_selected)
+                {
+                    second_selected = tile;
+                    
+                    map_tiles[tile].state = FACE_UP;
+                    update_tile_sprite(tile, map_tiles[tile]);
+                    
+                    check_pair();
+                }
+                
                 update_tile_sprite(map_tile->first, map_tile->second);
 
                 file.seekp(tile->id * sizeof(TileType), std::ios::beg);
