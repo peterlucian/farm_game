@@ -20,6 +20,8 @@
 #include <godot_cpp/variant/vector2.hpp>
 #include <godot_cpp/classes/resource_loader.hpp>
 #include <godot_cpp/classes/object.hpp>
+#include <godot_cpp/classes/scene_tree.hpp>
+#include <godot_cpp/classes/node2d.hpp>
 #include <utility>
 #include <iterator>
 
@@ -32,6 +34,8 @@ void GDExample::_bind_methods() {
                          &GDExample::_on_preview_timeout);
     ClassDB::bind_method(D_METHOD("_on_hide_timeout"),
                          &GDExample::_on_hide_timeout);
+    ClassDB::bind_method(D_METHOD("_on_restart_pressed"),
+                        &GDExample::_on_restart_pressed);
 }
 
 
@@ -136,6 +140,37 @@ void GDExample::_on_preview_timeout()
     }
 }
 
+
+void GDExample::_on_restart_pressed()
+{
+    // Stop timers first
+    if (preview_timer)
+        preview_timer->stop();
+
+    if (hide_timer)
+        hide_timer->stop();
+
+    file.close();
+    std::filesystem::remove("save.txt");
+
+    map_tiles.clear();
+    Array children = get_children();
+
+    for (int i = 0; i < children.size(); i++)
+    {
+        Object *obj = children[i];
+
+        if (m_tile *tile = Object::cast_to<m_tile>(obj))
+        {
+            tile->queue_free();
+        }
+    }
+
+    get_tree()->reload_current_scene();
+
+}
+
+
 void GDExample::_on_hide_timeout()
 {
     auto &first = map_tiles[first_selected];
@@ -167,6 +202,7 @@ void GDExample::_ready()
     add_child(preview_timer);
     add_child(hide_timer);
 
+    
     preview_timer->connect(
         "timeout",
         Callable(this, "_on_preview_timeout")
@@ -176,12 +212,17 @@ void GDExample::_ready()
         "timeout",
         Callable(this, "_on_hide_timeout")
     );
-
+    
     preview_timer->start();
-
+    
     raycast = get_node<RayCast2D>("../RayCast2D");
     line = get_node<Line2D>("../RayCast2D/Line2D");
-
+    restart_button = get_node<Button>("RestartButton");
+    
+    restart_button->connect(
+        "pressed",
+        Callable(this, "_on_restart_pressed")
+    );
    
     //file.open("save.txt", std::ios::in | std::ios::out | std::ios::trunc);
 	 // If file doesn't exist, create it

@@ -4,6 +4,19 @@
 
 [node name="GDExample" type="GDExample" parent="." unique_id=1617061937]
 
+[node name="RestartButton" type="Button" parent="GDExample" unique_id=570514042]
+anchors_preset = 12
+anchor_top = 1.0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 16.0
+offset_top = 313.0
+offset_right = 359.0
+offset_bottom = 372.0
+grow_horizontal = 2
+grow_vertical = 0
+text = "Restart"
+
 [node name="RayCast2D" type="RayCast2D" parent="." unique_id=1019127577]
 exclude_parent = false
 target_position = Vector2(-92, -88)

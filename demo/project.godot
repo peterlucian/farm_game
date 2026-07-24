@@ -16,8 +16,8 @@ config/features=PackedStringArray("4.6", "Mobile")
 
 [display]
 
-window/size/viewport_width=1275
-window/size/viewport_height=700
+window/size/viewport_width=450
+window/size/viewport_height=400
 
 [input]
 

@@ -8,6 +8,7 @@
 #include <godot_cpp/classes/line2d.hpp>
 #include <utility>
 #include <godot_cpp/classes/texture2d.hpp>
+#include <godot_cpp/classes/button.hpp>
 #include <godot_cpp/classes/timer.hpp>
 #include <godot_cpp/core/class_db.hpp>
 #include <godot_cpp/classes/ref.hpp>
@@ -64,6 +65,7 @@ public:
 	m_tile *second_selected = nullptr;
 	
 	Ref<Texture2D> tex = nullptr;
+	Button *restart_button = nullptr;
 
 	bool waiting_for_hide = false;
 
@@ -71,6 +73,9 @@ public:
 	void _process(double delta) override;
 	
 	bool is_empty();
+
+	void restart_game();
+	void _on_restart_pressed();
 	//void update_tile_sprite(std::pair<m_tile * const, Tile> &entry);
 	void update_tile_sprite(m_tile *tile, const TileData &data);
 	void _on_hide_timeout();
